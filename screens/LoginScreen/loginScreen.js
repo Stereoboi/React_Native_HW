@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import { useFonts } from 'expo-font';
+import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 
 SplashScreen.preventAutoHideAsync();
@@ -67,14 +67,14 @@ export default function LoginScreen(props) {
   };
 
   const onLogin = () => {
-    console.log("Credentials", `${email} + ${password}`);
+    console.log("LoginFormData", `${email} + ${password}`);
     setEmail("");
     setPassword("");
   };
 
   const onLinkPress = () => {
     console.log("Sending to registration form...");
-    props.switchScreen()
+    props.switchScreen();
   };
 
   return (
