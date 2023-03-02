@@ -1,11 +1,26 @@
+import { useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { ImageBackground, StyleSheet, View, Text } from "react-native";
+import LoginScreen from "./screens/LoginScreen/loginScreen";
+import RegistrationScreen from "./screens/RegistrationScreen/registrationScreen";
 
 export default function App() {
+  const [isLoginPage, setIsLoginPage] = useState(true);
+
+  const toggleScreen = () => {
+    setIsLoginPage(!isLoginPage);
+  };
+
   return (
     <View style={styles.container}>
-      <Text>Open App to start working on your app!15.02.23</Text>
       <StatusBar style="auto" />
+      <ImageBackground
+        source={require("./assets/img/backgroundPhoto_opt.jpg")}
+        style={styles.image}
+      >
+        {isLoginPage && <LoginScreen switchScreen={toggleScreen} />}
+        {!isLoginPage && <RegistrationScreen switchScreen={toggleScreen} />}
+      </ImageBackground>
     </View>
   );
 }
@@ -14,7 +29,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    alignItems: "center",
+  },
+  image: {
+    flex: 1,
+    resizeMode: "cover",
     justifyContent: "center",
+    alignItems: "center",
   },
 });
