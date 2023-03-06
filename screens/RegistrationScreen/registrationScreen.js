@@ -81,13 +81,13 @@ export default function RegistrationScreen(props) {
   };
 
   const onAvatarAddPress = () => {
-    console.log("Here is url link...");
-    setAvatar("Avatar url");
+    console.log("Here is some url link...");
+    setAvatar("Some avatar url");
   };
 
   const onRegister = () => {
     console.log(
-      "RegistrationFormData:",
+      "Registering data:",
       `${avatar} + ${name} + ${email} + ${password}`
     );
     setAvatar("");
