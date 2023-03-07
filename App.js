@@ -1,39 +1,40 @@
-import { useState } from "react";
-import { StatusBar } from "expo-status-bar";
-import { ImageBackground, StyleSheet, View, Text } from "react-native";
-import LoginScreen from "./screens/LoginScreen/loginScreen";
-import RegistrationScreen from "./screens/RegistrationScreen/registrationScreen";
+import React, { useCallback, useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import "react-native-gesture-handler";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+
+import { useRoute } from "./router";
+
+SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [isLoginPage, setIsLoginPage] = useState(true);
 
-  const toggleScreen = () => {
-    setIsLoginPage(!isLoginPage);
-  };
+  const [isAuthorized, setIsAuthorized] = useState(false)
 
-  return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      <ImageBackground
-        source={require("./assets/img/backgroundPhoto_opt.jpg")}
-        style={styles.image}
-      >
-        {isLoginPage && <LoginScreen switchScreen={toggleScreen} />}
-        {!isLoginPage && <RegistrationScreen switchScreen={toggleScreen} />}
-      </ImageBackground>
-    </View>
-  );
+  const authHandler = () => {
+    setIsAuthorized(!isAuthorized)
+  }
+
+  const [fontsLoaded] = useFonts({
+    "Roboto-Regular": require("./assets/fonts/Roboto/Roboto-Regular.ttf"),
+    "Roboto-Medium": require("./assets/fonts/Roboto/Roboto-Medium.ttf"),
+    "Roboto-Bold": require("./assets/fonts/Roboto/Roboto-Bold.ttf"),
+  });
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  onLayoutRootView();
+
+  const routing = useRoute({isAuthorized, authHandler});
+
+  return <NavigationContainer>{routing}</NavigationContainer>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  image: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
