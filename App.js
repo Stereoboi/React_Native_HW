@@ -1,40 +1,25 @@
-import React, { useCallback, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import "react-native-gesture-handler";
-import { useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
+// import { useCallback } from "react";
+// import { useFonts } from "expo-font";
+// import * as SplashScreen from "expo-splash-screen";
+// SplashScreen.preventAutoHideAsync();
 
+import { NavigationContainer } from "@react-navigation/native";
 import { useRoute } from "./router";
 
-SplashScreen.preventAutoHideAsync();
+const App = () => {
+  // const [fontsLoaded] = useFonts({
+  //   "Roboto": require("./assets/fonts/Roboto/Roboto-Regular.ttf"),
+  //   "ShantellSans-SemiBold": require("./assets/fonts/Shantell_Sans/ShantellSans-SemiBoldItalic.ttf"),
+  // });
 
-export default function App() {
+  // const onLayoutRootView = useCallback(async () => {
+  //   if (fontsLoaded) {
+  //     await SplashScreen.hideAsync();
+  //   }
+  // }, [fontsLoaded]);
 
-  const [isAuthorized, setIsAuthorized] = useState(false)
-
-  const authHandler = () => {
-    setIsAuthorized(!isAuthorized)
-  }
-
-  const [fontsLoaded] = useFonts({
-    "Roboto-Regular": require("./assets/fonts/Roboto/Roboto-Regular.ttf"),
-    "Roboto-Medium": require("./assets/fonts/Roboto/Roboto-Medium.ttf"),
-    "Roboto-Bold": require("./assets/fonts/Roboto/Roboto-Bold.ttf"),
-  });
-
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
-  onLayoutRootView();
-
-  const routing = useRoute({isAuthorized, authHandler});
-
+  const routing = useRoute(false);
   return <NavigationContainer>{routing}</NavigationContainer>;
-}
+};
+
+export default App;

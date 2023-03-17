@@ -1,46 +1,35 @@
 import React from "react";
-
 import { createStackNavigator } from "@react-navigation/stack";
-
-import LoginScreen from "./screens/AuthScreen/LoginScreen";
-import RegistrationScreen from "./screens/AuthScreen/RegistrationScreen";
-
-import HomeScreen from "./screens/MainScreen/HomeScreen";
 
 const AuthStack = createStackNavigator();
 
-export const useRoute = (props) => {
-  function LogIn() {
-    console.log("Logging in");
-    props.authHandler();
-  }
+import HomeTabs from "./screens/authScreens/Home";
+import Login from "./screens/authScreens/Login";
+import Register from "./screens/authScreens/Register";
 
-  function LogOut() {
-    console.log("Logging out");
-    props.authHandler();
-  }
-
-  if (!props.isAuthorized) {
+export const useRoute = (isAuth) => {
+  if (!isAuth) {
     return (
       <AuthStack.Navigator initialRouteName="Login">
         <AuthStack.Screen
-          name="Login"
-          options={{
-            title: "Login screen",
-            headerShown: false,
-          }}
-          component={LoginScreen}
-          initialParams={{ LogIn: LogIn }}
+          options={{ headerShown: false }}
+          name="Register"
+          component={Register}
         />
         <AuthStack.Screen
-          name="Register"
-          options={{ title: "Registration screen", headerShown: false }}
-          component={RegistrationScreen}
-          initialParams={{ LogIn: LogIn }}
+          options={{ headerShown: false }}
+          name="Login"
+          component={Login}
+        />
+        <AuthStack.Screen
+          name="Home"
+          component={HomeTabs}
+          options={{
+            headerShown: false,
+          }}
         />
       </AuthStack.Navigator>
     );
   }
-
-  return <HomeScreen LogOut={LogOut}/>;
+  return <HomeTabs />;
 };
