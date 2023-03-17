@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "react-native-hw-01",
-    "slug": "react-native-hw-01",
+    "name": "react-native-hw-03",
+    "slug": "react-native-hw-03",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -14,9 +14,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -24,8 +22,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      },
-      "softwareKeyboardLayoutMode": "pan"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
