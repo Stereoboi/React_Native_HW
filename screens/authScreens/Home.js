@@ -1,7 +1,9 @@
 import React from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+
 import ProfileScreen from "../mainScreens/ProfileScreen";
 import CreatePostsScreen from "../mainScreens/CreatePostsScreen";
 import PostsScreen from "../mainScreens/PostsScreen";
@@ -52,23 +54,7 @@ const HomeTabs = ({ navigation }) => {
       <MainBottomTabs.Screen
         name="Posts"
         component={PostsScreen}
-        options={{
-          title: "Публікації",
-          headerStyle,
-
-          headerTitleStyle,
-          headerTitleAlign: "center",
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Login")}
-              title="Info"
-              color="#fff"
-              style={{ marginRight: 16 }}
-            >
-              <Ionicons name="ios-exit-outline" size={24} color="#BDBDBD" />
-            </TouchableOpacity>
-          ),
-        }}
+        options={{ headerShown: false }}
       />
       <MainBottomTabs.Screen
         name="Create"

@@ -1,28 +1,55 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+
+import { collection, onSnapshot } from "firebase/firestore";
+import { firestore } from "../../firebase/config";
+
 import { StyleSheet, View, Image, Text, FlatList } from "react-native";
 import PostItemSimple from "../../components/PostItemSimple/PostItemSimple";
-import { userPosts } from "../../components/userPosts";
-
-const image = "../../img//user-foto.jpg";
+import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
+import {
+  selectDisplayName,
+  selectUserEmail,
+  selectUserPhotoURL,
+} from "../../redux/auth/auth.selectors";
 
 const DefaultPhotoScreen = ({ navigation, route }) => {
-  const [posts, setPosts] = useState(userPosts);
+  const [posts, setPosts] = useState([]);
+
+  const displayName = useSelector(selectDisplayName);
+  const email = useSelector(selectUserEmail);
+  const photoURL = useSelector(selectUserPhotoURL);
+
+  const getAllPosts = async () => {
+    const firestoreRef = collection(firestore, "posts");
+    onSnapshot(firestoreRef, (querySnapshot) => {
+      const postsFromDB = [];
+      querySnapshot.forEach((doc) =>
+        postsFromDB.push({ ...doc.data(), id: doc.id })
+      );
+      console.log(postsFromDB);
+      setPosts(postsFromDB);
+    });
+  };
+  useEffect(() => {
+    if (route.params) setPosts((prevState) => [...prevState, route.params]);
+  }, [route.params]);
 
   useEffect(() => {
-    if (route.params) {
-      setPosts((prevState) => [...prevState, route.params]);
-    }
-  }, [route.params]);
+    getAllPosts();
+  }, []);
 
   return (
     <View style={styles.postsContainer}>
-      <View style={styles.userContainer}>
-        <Image source={require(image)} style={styles.userImage} />
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>Natali Romanova</Text>
-          <Text style={styles.userEmail}>email@example.com</Text>
+      <Pressable onPress={() => navigation.navigate("Profile")}>
+        <View style={styles.userContainer}>
+          <Image source={{ uri: photoURL }} style={styles.userImage} />
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{displayName}</Text>
+            <Text style={styles.userEmail}>{email}</Text>
+          </View>
         </View>
-      </View>
+      </Pressable>
       <FlatList
         data={posts}
         renderItem={({ item }) => (
@@ -54,9 +81,7 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     display: "flex",
-
     flexDirection: "column",
-    alignItems: "center",
     justifyContent: "flex-start",
   },
   userName: {
