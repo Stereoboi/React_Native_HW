@@ -11,12 +11,16 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { logIn } from "../../redux/auth/auth.operations";
 
 const image = "../../img/photo-bg.jpg";
 
 const Login = ({ navigation }) => {
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
+  const dispatch = useDispatch();
+
+  const [password, setPassword] = useState("user123");
+  const [email, setEmail] = useState("user@mail.com");
   const [isShowPass, setIsShowPass] = useState(true);
   const [isKeyboardShow, setIsKeyboardShow] = useState(false);
 
@@ -24,11 +28,12 @@ const Login = ({ navigation }) => {
   const emailHandler = (text) => setEmail(text);
   const showPassToggle = () => setIsShowPass(!isShowPass);
 
-  const onLogin = () => {
-    console.log(`User Password: ${password}, Email: ${email}`);
-    setEmail("");
-    setPassword("");
-    navigation.navigate("Home");
+  const submitLogin = () => {
+    dispatch(logIn({ password, email }));
+
+    // setEmail("");
+    // setPassword("");
+    // navigation.navigate("Home");
   };
   const keyBoardHide = () => {
     setIsKeyboardShow(false);
@@ -76,7 +81,7 @@ const Login = ({ navigation }) => {
               </View>
               <TouchableOpacity
                 title={"Увійти"}
-                onPress={onLogin}
+                onPress={submitLogin}
                 accessibilityLabel="Увійти"
                 style={styles.buttonLogin}
               >

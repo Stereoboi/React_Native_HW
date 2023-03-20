@@ -1,4 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+
+import { collection, onSnapshot } from "firebase/firestore";
+import { firestore } from "../../firebase/config";
+
+import { logOut } from "../../redux/auth/auth.operations";
+import {
+  selectDisplayName,
+  selectUserEmail,
+  selectUserId,
+  selectUserPhotoURL,
+} from "../../redux/auth/auth.selectors";
+
+import PostItem from "../../components/PostItem/PostItem";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SimpleLineIcons } from "@expo/vector-icons";
 
@@ -12,13 +26,16 @@ import {
   Dimensions,
   FlatList,
 } from "react-native";
-import PostItem from "../../components/PostItem/PostItem";
-import { userPosts } from "../../components/userPosts";
 
 const backgroundPicture = "../../img/photo-bg.jpg";
-const userImage = "../../img/user-foto.jpg";
 
 const ProfileScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const displayName = useSelector(selectDisplayName);
+  const photoURL = useSelector(selectUserPhotoURL);
+  const userId = useSelector(selectUserId);
+  const [posts2, setPosts2] = useState([]);
+
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get("window").width
   );
@@ -26,6 +43,10 @@ const ProfileScreen = ({ navigation }) => {
   const [windowHeight, setWindowHeight] = useState(
     Dimensions.get("window").height
   );
+
+  const logOutHandler = () => {
+    dispatch(logOut());
+  };
 
   useEffect(() => {
     const onChange = () => {
@@ -38,6 +59,28 @@ const ProfileScreen = ({ navigation }) => {
 
     return () => dimensionsHandler?.remove();
   }, []);
+
+  const getAllPosts = async () => {
+    const firestoreRef = collection(firestore, "posts");
+    onSnapshot(firestoreRef, (querySnapshot) => {
+      const postsFromDB = [];
+      querySnapshot.forEach((doc) =>
+        postsFromDB.push({ ...doc.data(), id: doc.id })
+      );
+      console.log("USER POSTS", postsFromDB);
+      console.log("USER ID", userId);
+      const userPostsFromDB = postsFromDB.filter(
+        (post) => post.userId === userId
+      );
+      console.log("USER POSTS", userPostsFromDB);
+      setPosts2(userPostsFromDB);
+    });
+  };
+
+  useEffect(() => {
+    getAllPosts();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
@@ -61,7 +104,7 @@ const ProfileScreen = ({ navigation }) => {
         >
           <View style={styles.userAvatar}>
             <ImageBackground
-              source={require(userImage)}
+              source={{ uri: photoURL }}
               resizeMode="cover"
               style={styles.userImageBackground}
             >
@@ -82,7 +125,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
           <Pressable
             style={{ position: "absolute", top: 24, right: 24 }}
-            onPress={() => navigation.navigate("Login")}
+            onPress={logOutHandler}
             title="LogOut"
             color="#fff"
           >
@@ -93,10 +136,12 @@ const ProfileScreen = ({ navigation }) => {
               style={{ transform: [{ rotate: "180deg" }] }}
             />
           </Pressable>
-          <Text style={styles.userLabel}>Наталі Романова</Text>
+          <Text style={styles.userLabel}>{displayName}</Text>
           <FlatList
-            data={userPosts}
-            renderItem={({ item }) => <PostItem data={item} />}
+            data={posts2}
+            renderItem={({ item }) => (
+              <PostItem data={item} navigation={navigation} />
+            )}
             keyExtractor={(item) => item.id}
           />
         </View>

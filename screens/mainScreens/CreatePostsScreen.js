@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Camera } from "expo-camera";
+import * as MediaLibrary from "expo-media-library";
 import * as Location from "expo-location";
-
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, addDoc } from "firebase/firestore";
 import {
   TouchableWithoutFeedback,
   Keyboard,
@@ -16,30 +18,103 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { nanoid } from "nanoid";
+import { firestore, storage } from "../../firebase/config";
+import { useSelector } from "react-redux";
+import {
+  selectDisplayName,
+  selectUserId,
+} from "../../redux/auth/auth.selectors";
 
 const CreatePostsScreen = ({ navigation }) => {
   const [camera, setCamera] = useState(null);
-  const [postName, setPostName] = useState("");
-  const [postLocation, setPostLocation] = useState("");
+  const [postName, setPostName] = useState("user post");
+  const [postLocation, setPostLocation] = useState("Lviv");
+  const [region, setRegion] = useState("");
   const [postLocationGPS, setPostLocationGPS] = useState(null);
   const [photo, setPhoto] = useState("");
   const [isKeyboardShow, setIsKeyboardShow] = useState(false);
 
+  const userId = useSelector(selectUserId);
+  const displayName = useSelector(selectDisplayName);
   const postNameHandler = (text) => setPostName(text.trim());
   const postLocationHandler = (text) => setPostLocation(text.trim());
 
   const takePhoto = async () => {
     try {
       const photo = await camera.takePictureAsync();
+      await MediaLibrary.requestPermissionsAsync();
+
+      let photoLocation = await Location.getCurrentPositionAsync({});
+      let coords = {
+        latitude: photoLocation.coords.latitude,
+        longitude: photoLocation.coords.longitude,
+      };
+      let address = await Location.reverseGeocodeAsync(coords);
+      let city = address[0].city;
+      setPostLocationGPS(coords);
+      setRegion(city);
+
       setPhoto(photo.uri);
     } catch (error) {
       console.log("error", error.message);
     }
   };
 
+  const uploadPhotoToServer = async () => {
+    const postId = Date.now().toString();
+
+    const path = `images/${postId}.jpeg`;
+    const storageRef = ref(storage, path);
+
+    const response = await fetch(photo);
+    const file = await response.blob();
+
+    await uploadBytes(storageRef, file).then(() => {
+      console.log("Uploaded a blob or file!");
+    });
+
+    const processedPhoto = await getDownloadURL(storageRef)
+      .then((downloadURL) => {
+        return downloadURL;
+      })
+      .catch((error) => {
+        console.log(error.message);
+      });
+
+    return processedPhoto;
+  };
+
+  const uploadPostToServer = async () => {
+    const photo = await uploadPhotoToServer();
+    const newPost = {
+      userId,
+      displayName,
+      photo,
+      postName,
+      comments: 0,
+      likes: 0,
+      postLocation,
+      location: {
+        region,
+        ...postLocationGPS,
+      },
+    };
+    console.log(newPost);
+    try {
+      await addDoc(collection(firestore, "posts"), newPost);
+      console.log("Post is loaded. Well Done");
+    } catch (error) {
+      console.log(
+        "ERRRRRRRRRRRRRRRRRRRRRRRRRRROOOOOOOOOOOOOOOOOOOOOOOOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
+      );
+      console.error("Error while adding doc: ", error.message);
+    }
+  };
   useEffect(() => {
     const getCameraPermission = async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
+      let { status } = await Camera.requestCameraPermissionsAsync();
+      await MediaLibrary.requestPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg(
           "Access denied. Permission is required to access the camera."
@@ -49,20 +124,13 @@ const CreatePostsScreen = ({ navigation }) => {
     };
 
     const getLocationPermission = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg(
           "Access denied. Permission is required to access the location."
         );
         return;
       }
-      let location = await Location.getCurrentPositionAsync({});
-      const coords = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-
-      setPostLocationGPS(coords);
     };
 
     getCameraPermission();
@@ -74,28 +142,18 @@ const CreatePostsScreen = ({ navigation }) => {
   };
 
   const onSubmitHandler = async () => {
-    console.log("SENDING NEW POST =====>", postLocation);
-    console.log("postLocationGPS", postLocationGPS);
-    const newPost = {
-      id: 2888,
-      title: postName,
-      image: photo,
-      comments: 0,
-      likes: 0,
-      location: { country: postLocation, ...postLocationGPS },
-    };
-    console.log(newPost);
-    navigation.navigate("DefaultPostScreen", {
-      newPost,
-    });
-    clearPostMeta();
+    uploadPhotoToServer();
+    uploadPostToServer();
+
+    navigation.navigate("DefaultPostScreen");
     Keyboard.dismiss();
+    clearPostMeta();
   };
 
   const clearPostMeta = () => {
-    setPostName("");
-    setPostLocation("");
-    setPhoto("");
+    // setPostName("");
+    // setPostLocation("");
+    // setPhoto("");
   };
 
   const keyboardHide = () => {
@@ -114,30 +172,31 @@ const CreatePostsScreen = ({ navigation }) => {
             }}
           >
             <View>
-              {photo ? (
-                <View style={styles.takenPhotoContainer}>
-                  <Image
-                    source={{ uri: photo }}
-                    style={{ height: 240, width: "100%" }}
-                  />
-                  <TouchableOpacity
-                    style={styles.newPhotoButton}
-                    onPress={() => setPhoto("")}
-                  >
-                    <Ionicons name="camera-reverse" size={24} color="white" />
-                    <Text style={{ color: "#FFFFFF" }}>Змінити фото</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <Camera ref={setCamera} style={styles.camera}>
-                  <TouchableOpacity
-                    style={styles.takePhotoButton}
-                    onPress={takePhoto}
-                  >
-                    <Ionicons name="camera-sharp" size={20} color="#BDBDBD" />
-                  </TouchableOpacity>
-                </Camera>
-              )}
+              {!isKeyboardShow &&
+                (photo ? (
+                  <View style={styles.takenPhotoContainer}>
+                    <Image
+                      source={{ uri: photo }}
+                      style={{ height: 240, width: "100%" }}
+                    />
+                    <TouchableOpacity
+                      style={styles.newPhotoButton}
+                      onPress={() => setPhoto("")}
+                    >
+                      <Ionicons name="camera-reverse" size={24} color="white" />
+                      <Text style={{ color: "#FFFFFF" }}>Змінити фото</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <Camera ref={setCamera} style={styles.camera}>
+                    <TouchableOpacity
+                      style={styles.takePhotoButton}
+                      onPress={takePhoto}
+                    >
+                      <Ionicons name="camera-sharp" size={20} color="#BDBDBD" />
+                    </TouchableOpacity>
+                  </Camera>
+                ))}
 
               <View style={styles.formBox}>
                 <TouchableOpacity>

@@ -2,24 +2,16 @@
 // import { useFonts } from "expo-font";
 // import * as SplashScreen from "expo-splash-screen";
 // SplashScreen.preventAutoHideAsync();
-
-import { NavigationContainer } from "@react-navigation/native";
-import { useRoute } from "./router";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
+import Main from "./components/Main";
 
 const App = () => {
-  // const [fontsLoaded] = useFonts({
-  //   "Roboto": require("./assets/fonts/Roboto/Roboto-Regular.ttf"),
-  //   "ShantellSans-SemiBold": require("./assets/fonts/Shantell_Sans/ShantellSans-SemiBoldItalic.ttf"),
-  // });
-
-  // const onLayoutRootView = useCallback(async () => {
-  //   if (fontsLoaded) {
-  //     await SplashScreen.hideAsync();
-  //   }
-  // }, [fontsLoaded]);
-
-  const routing = useRoute(false);
-  return <NavigationContainer>{routing}</NavigationContainer>;
+  return (
+    <Provider store={store}>
+      <Main />
+    </Provider>
+  );
 };
 
 export default App;

@@ -16,27 +16,24 @@ import {
 } from "./PostItemSimple.styles";
 
 const PostItemSimple = ({ data, navigation }) => {
-  const { title, image, location, comments } = data;
-  const locationInfo = `${location?.region || "невідомо"}, ${
-    location?.country || "невідомо"
-  }`;
-  console.log(data);
+  const { id, postName, photo, location, comments } = data;
+
+  const locationInfo = `${location?.region || "невідомо"}`;
   const commentsHandler = () => {
-    navigation.navigate("Comments", { data });
+    navigation.navigate("Comments", { id, photo });
   };
   const locationHandler = () => {
     navigation.navigate("Map", { location });
   };
-
   return (
     <View style={postItem}>
-      <Image source={image} style={postImage} />
-      <Text style={postLabel}>{title}</Text>
+      <Image source={{ uri: photo }} style={postImage} />
+      <Text style={postLabel}>{postName}</Text>
       <View style={metaWrapper}>
         <View style={commentsInner}>
           <Pressable onPress={commentsHandler} style={commentsWrapper}>
             <FontAwesome name="comment-o" size={18} color="#BDBDBD" />
-            <Text style={commentsLabel}>{comments}</Text>
+            <Text style={commentsLabel}>0</Text>
           </Pressable>
         </View>
         <Pressable onPress={locationHandler} style={locationWrapper}>

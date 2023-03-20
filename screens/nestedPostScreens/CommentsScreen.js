@@ -1,96 +1,182 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  collection,
+  addDoc,
+  doc,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
+import { firestore } from "../../firebase/config";
+import { selectDisplayName } from "../../redux/auth/auth.selectors";
+
+import {
   ScrollView,
+  Text,
+  View,
   FlatList,
-  Pressable,
+  StyleSheet,
+  TouchableWithoutFeedback,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
+  TouchableOpacity,
+  Keyboard,
+  Image,
 } from "react-native";
+
+import { useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 
 const CommentsScreen = ({ route }) => {
-  const { title } = route.params;
-  const [comments, setComments] = useState("");
+  const { id, photo } = route.params;
 
-  const [isKeyboardShow, setIsKeyboardShow] = useState(false);
-  const commentsdHandler = (text) => setComments(text);
-  const handlerSubmit = () => {
-    console.log("comments", comments);
+  const [comment, setComment] = useState("222");
+  const [allComments, setAllcomments] = useState("");
+  const displayName = useSelector(selectDisplayName);
+
+  const sendCommentToServer = async () => {
+    const date = new Date().toLocaleDateString();
+    const time = new Date().toLocaleTimeString();
+
+    try {
+      const postsRef = doc(firestore, `posts`, id);
+
+      await addDoc(collection(postsRef, "comments"), {
+        comment,
+        displayName,
+        date,
+        time,
+      });
+      //---------------------------------------------------------------------
+    } catch (error) {
+      console.log("error.message", error.message);
+    }
   };
+
+  const createComment = () => {
+    sendCommentToServer();
+    // setComment("");
+    keyboardHide();
+  };
+
+  const getAllComents = async () => {
+    try {
+      const firestoreRef = doc(firestore, "posts", id);
+      onSnapshot(collection(firestoreRef, "comments"), (docSnap) =>
+        setAllcomments(docSnap.docs.map((doc) => ({ ...doc.data() })))
+      );
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    getAllComents();
+  }, []);
+
+  const keyboardHide = () => {
+    Keyboard.dismiss();
+  };
+
+  const renderItem = ({ item }) => (
+    <View>
+      <View style={styles.comment}>
+        <Text>Користувач: {displayName}</Text>
+        <Text>Коментар: {item.comment}</Text>
+        <Text style={styles.date}>
+          {item.date} о {item.time}
+        </Text>
+      </View>
+    </View>
+  );
+
   return (
-    <ScrollView
-      // nestedScrollEnabled={true}
-      style={{
-        flex: 1,
-        backgroundColor: "#FFFFFF",
-        paddingHorizontal: 16,
-        width: "100%",
-      }}
-    >
-      <Text style={postLabel}>{title}</Text>
-      {/* <FlatList
-            data={posts}
-            renderItem={({ item }) => (
-              <PostItemSimple data={item} navigation={navigation} />
-            )}
-            keyExtractor={(item) => item.id}
-          /> */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS == "ios" ? "padding" : "height"}
-      >
-        <View style={submitComment}>
-          <TextInput
-            value={comments}
-            onChangeText={commentsdHandler}
-            placeholder="Прокоментувати"
-            style={inputComments}
-            onFocus={() => setIsKeyboardShow(true)}
+    <ScrollView style={styles.container} nestedScrollEnabled={true}>
+      <TouchableWithoutFeedback onPress={keyboardHide}>
+        <View>
+          <Image
+            source={{ uri: photo }}
+            style={{ height: 240, borderRadius: 8 }}
           />
-          <Pressable
-            onPress={handlerSubmit}
-            style={submitIcon}
-            accessibilityLabel="Показати пароль"
-          >
-            <Ionicons name="arrow-up-circle" size={34} color="#FF6C00" />
-          </Pressable>
+          <View>
+            <ScrollView horizontal={true}>
+              <FlatList
+                data={allComments}
+                keyExtractor={allComments.id}
+                renderItem={renderItem}
+              />
+            </ScrollView>
+          </View>
+          <View style={styles.inputContainer}>
+            <View>
+              <TextInput
+                value={comment}
+                onChangeText={setComment}
+                placeholder="Коментувати..."
+                style={styles.submitBtn}
+              />
+              <TouchableOpacity onPress={createComment}>
+                <Ionicons
+                  name="arrow-up-circle"
+                  size={34}
+                  color="#FF6C00"
+                  style={styles.sendIcon}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </ScrollView>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginTop: 32,
+    marginBottom: 32,
+  },
+  comment: {
+    minWidth: 320,
+    marginVertical: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: "rgba(0, 0, 0, 0.03)",
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+  },
+  date: {
+    fontSize: 12,
+    textAlign: "right",
+    color: "grey",
+  },
+  submitBtn: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 32,
+    padding: 16,
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 20,
+    borderColor: "rgba(189, 189, 189, 1)",
+    backgroundColor: "#FFFFFF",
+  },
+  sendIcon: {
+    position: "absolute",
+
+    right: 15,
+    bottom: 8,
+  },
+  inputContainer: {
+    marginHorizontal: 10,
+    marginBottom: 20,
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E8E8E8",
+    height: 50,
+    fontSize: 16,
+  },
+});
+
 export default CommentsScreen;
-
-import { Dimensions } from "react-native";
-const windowWidth = Dimensions.get("window").width;
-
-export const submitComment = StyleSheet.create({
-  position: "relative",
-  flex: 1,
-});
-export const inputComments = StyleSheet.create({
-  fontFamily: "Roboto",
-  height: 50,
-  padding: 16,
-  backgroundColor: "#F6F6F6",
-  borderRadius: 100,
-  border: "1px solid ##E8E8E8",
-  width: windowWidth - 32,
-  alignSelf: "flex-end",
-});
-export const postLabel = StyleSheet.create({
-  fontSize: 16,
-  fontWeight: "500",
-  marginBottom: 12,
-  textAlign: "left",
-  fontFamily: "Roboto",
-});
-export const submitIcon = StyleSheet.create({
-  position: "absolute",
-  top: 8,
-  right: 8,
-});
