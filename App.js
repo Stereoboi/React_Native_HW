@@ -3,8 +3,8 @@
 // import * as SplashScreen from "expo-splash-screen";
 // SplashScreen.preventAutoHideAsync();
 import { Provider } from "react-redux";
-import { store } from "./redux/store";
-import Main from "./components/Main";
+import { store } from "./src/redux/store";
+import Main from "./src/components/Main";
 
 const App = () => {
   return (

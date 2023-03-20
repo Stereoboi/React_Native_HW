@@ -11,7 +11,7 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { NavigationContainer } from "@react-navigation/native";
 
-import { useRoute } from "../router";
+import { useRoute } from "../../router";
 import { selectStateChange } from "../redux/auth/auth.selectors";
 import { authStateCahngeUser } from "../redux/auth/auth.operations";
 
